@@ -1,0 +1,114 @@
+#scrollback {
+  background-color:rgb(0,0,0);
+  color:rgb(255,255,255);
+}
+.ansi-direct {
+  white-space:pre;
+  font-family:monospace;
+  line-height:1.0;
+}
+.ansi {
+  color:white;;
+  background-color:black;
+}
+
+.ansi-bold {
+  font-weight:bold;
+}
+.ansi-fg-black {
+  color:rgb(0,0,0);
+}
+.ansi-fg-red {
+  color:rgb(187,0,0);
+}
+.ansi-fg-green {
+  color:rgb(0,187,0);
+}
+.ansi-fg-yellow {
+  color:rgb(187,187,0);
+}
+.ansi-fg-blue {
+  color:rgb(0,0,187);
+}
+.ansi-fg-magenta {
+  color:rgb(187,0,1987);
+}
+.ansi-fg-cyan {
+  color:rgb(0,187,187);
+}
+.ansi-fg-white {
+  color:rgb(255,255,255);
+}
+.ansi-fg-brightblack {
+  color:rgb(85,85,85  );
+}
+.ansi-fg-brightred {
+  color:rgb(255,85,85);
+}
+.ansi-fg-brightgreen {
+  color:rgb(85,255,85);
+}
+.ansi-fg-brightyellow {
+  color:rgb(255,255,85);
+}
+.ansi-fg-brightblue {
+  color:rgb(85,85,255);
+}
+.ansi-fg-brightmagenta {
+  color:rgb(85,255,85);
+}
+.ansi-fg-brightcyan {
+  color:rgb(85,255,255);
+}
+.ansi-fg-brightwhite {
+  color:rgb(255,255,255);
+}
+
+.ansi-bg-black {
+  background-color:black;
+}
+.ansi-bg-red {
+  background-color:red;
+}
+.ansi-bg-green {
+  background-color:green;
+}
+.ansi-bg-yellow {
+  background-color:yellow;
+}
+.ansi-bg-blue {
+  background-color:blue;
+}
+.ansi-bg-magenta {
+  background-color:magenta;
+}
+.ansi-bg-cyan {
+  background-color:cyan;
+}
+.ansi-bg-white {
+  background-color:white;
+}
+.ansi-bg-brightblack {
+  background-color:rgb(85,85,85  );
+}
+.ansi-bg-brightred{
+  background-color:rgb(255,85,85);
+}
+.ansi-bg-brightgreen {
+  background-color:rgb(85,255,85);
+}
+.ansi-bg-brightyellow {
+  background-color:rgb(255,255,85);
+}
+.ansi-bg-brightblue {
+  background-color:rgb(85,85,255);
+}
+.ansi-bg-brightmagenta {
+  background-color:rgb(85,255,85);
+}
+.ansi-bg-brightcyan {
+  background-color:rgb(85,255,255);
+}
+.ansi-bg-brightwhite {
+  background-color:rgb(255,255,255);
+}

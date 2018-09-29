@@ -1,0 +1,16 @@
+{
+  "name": "mudgateway-client",
+  "version": "1.0.0",
+  "description": "Mud Gateway Client",
+  "main": "mudGatewayClient.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "GPL-3.0-or-later",
+  "dependencies": {
+    "install": "^0.12.1",
+    "npm": "^6.4.1",
+    "serverless-s3-sync": "github:robjcaskey/serverless-s3-sync#fix-s3-params"
+  }
+}

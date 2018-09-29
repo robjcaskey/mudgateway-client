@@ -1,0 +1,48 @@
+.aardTag-rname {
+  font-size:large;  
+  font-family:sans-serif;
+  margin-top:1em;
+  
+}
+.aardTag-rdesc {
+  font-family:sans-serif;
+  line-height:1.2;
+}
+.aardTag-chan {
+  background-color:blue;
+  border-radius:1em;
+  padding:1em;
+  margin:1em;
+}
+.aardTag-coords {
+  display:none;
+}
+.aardTag-helpkeywords {
+  font-family:sans-serif;
+  font-size:larger;
+}
+
+.aardTag-help, .aardTag-score, .aardCmd-who {
+  font-family:monospace;
+  white-space:pre;
+  max-height: calc(50vh - 210px);
+  overflow-y: auto;
+}
+.aardTag-exits {
+  display:block;
+  border:3px
+}
+.aardTag-affon,.aardTag-affoff {
+  display:none;
+}
+
+.aardPrompt {
+}
+.aardMap {
+  font-family:monospace;
+  white-space:pre;
+  position:fixed;
+  top:0px;
+  right:15px;
+  margin:1em;
+}
