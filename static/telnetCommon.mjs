@@ -850,62 +850,68 @@ MudSession.prototype.sendToProxy = function(action, payload) {
   this.webSocket.send(JSON.stringify(data));
 }
 
-export function setupMudSession(WebSocketClass, options) {
-  scrollBottom = options.scrollBottom;
-  screenCursor = options.screenCursor;
+export function setupMudSession(WebSocketClass, getPortalUrl, options) {
+  return getPortalUrl(options)
+  .then(portalUrl => {
+    scrollBottom = options.scrollBottom;
+    screenCursor = options.screenCursor;
 
-  var webSocket = new WebSocketClass(options.portalUrl, ['echo-protocol']);
-  var mudSession = new MudSession(webSocket);
+    var webSocket = new WebSocketClass(portalUrl, ['echo-protocol']);
+    var mudSession = new MudSession(webSocket);
 
-  setupTriggers(mudSession)
-  webSocket.onopen = function() {
-    console.log('WebSocket Client Connected');
-    mudSession.sendToProxy('connect', {host:options.host,port:options.port})
-    mudSession.sendRawCodes([TELNET.IAC,TELNET.WILL,FEATURE.MXP])
-    mudSession.sendRawCodes([TELNET.IAC,TELNET.WILL,FEATURE.GMCP])
-    mudSession.sendRawCodes([TELNET.IAC,TELNET.WILL,FEATURE.ATCP])
-    mudSession.sendRawCodes([TELNET.IAC,TELNET.WILL,FEATURE.AARD])
-  }
-  var cursor = mudSession.socketBuffer.cursor();
-  webSocket.onerror = function(error) {
-      console.log("Connection Error: " + JSON.stringify(error))
-  }
-  webSocket.onclose = function() {
-      console.log('echo-protocol Connection Closed');
-  }
-  webSocket.onmessage = function(message) {
-    var waitingForData = false;
-
-    function waitForData() {
-      return new Promise((resolve, reject) => {
-        waitingForData = resolve;
-      });
-    }
-
-    if (message.type === 'message') {
-      var data = JSON.parse(message.data);
-      console.log(data)
-      var action = data.action;
-      var payload = data.payload;
-      if(action == "telnetData") {
-        var data = payload.data;
-        for(var i=0; i < data.length; i++) {
-          mudSession.socketBuffer.append(data[i])
-        }
-        if(waitingForData) {
-          waitingForData();
-          waitingForData = false;
-        }
-      }
-      else if(action == "proxyError") {
-        throw message;
-      }
-      else {
-        //console.log("Client received: '" + message.utf8Data + "'");
+    setupTriggers(mudSession)
+    webSocket.onopen = function() {
+      console.log('WebSocket Client Connected');
+      mudSession.sendToProxy('connect', {host:options.host,port:options.port})
+      mudSession.sendRawCodes([TELNET.IAC,TELNET.WILL,FEATURE.MXP])
+      mudSession.sendRawCodes([TELNET.IAC,TELNET.WILL,FEATURE.GMCP])
+      mudSession.sendRawCodes([TELNET.IAC,TELNET.WILL,FEATURE.ATCP])
+      mudSession.sendRawCodes([TELNET.IAC,TELNET.WILL,FEATURE.AARD])
+      if(options.onConnect) {
+        options.onConnect(mudSession);
       }
     }
-  }
-  return mudSession;
+    var cursor = mudSession.socketBuffer.cursor();
+    webSocket.onerror = function(error) {
+        console.log("Connection Error: " + JSON.stringify(error))
+    }
+    webSocket.onclose = function() {
+        console.log('echo-protocol Connection Closed');
+    }
+    webSocket.onmessage = function(message) {
+      var waitingForData = false;
+
+      function waitForData() {
+        return new Promise((resolve, reject) => {
+          waitingForData = resolve;
+        });
+      }
+
+      if (message.type === 'message') {
+        var data = JSON.parse(message.data);
+        console.log(data)
+        var action = data.action;
+        var payload = data.payload;
+        if(action == "telnetData") {
+          var data = payload.data;
+          for(var i=0; i < data.length; i++) {
+            mudSession.socketBuffer.append(data[i])
+          }
+          if(waitingForData) {
+            waitingForData();
+            waitingForData = false;
+          }
+        }
+        else if(action == "proxyError") {
+          throw message;
+        }
+        else {
+          //console.log("Client received: '" + message.utf8Data + "'");
+        }
+      }
+    }
+    return mudSession;
+  });
 }
 
 export function makeScreen() {

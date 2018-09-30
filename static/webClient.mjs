@@ -2,7 +2,8 @@ import {GeneralBuffer} from './GeneralBuffer.mjs';
 import {setupMudSession} from './telnetCommon.mjs';
 import {AnsiCursor} from './AnsiCursor.mjs';
 
-var URL = 'ws://54.197.28.49:8080/';
+// undefined to use mudgateway or ws://hostname.goes.here:8080
+var PORTAL_URL = undefined;
 
 function draw(el) {
   flushOutputBuffer();
@@ -58,9 +59,26 @@ function writeStringToScreen(x) {
 var screenBuffer = new GeneralBuffer();
 var screenCursor = new AnsiCursor(screenBuffer);
 
+function justUseUrl() {
+  return Promise.resolve(PORTAL_URL);
+}
 
-var mudSession = setupMudSession(WebSocket, {
-  portalUrl:URL,
+var lookUpMudGatewayUrl = function(options) {
+  var apiRoot = "https://api-dev.mudgateway.com";
+  var apiUrl = apiRoot+"/getPortalUrl";
+  return new Promise((resolve, reject) => {
+    $.post(apiUrl, {
+      host:options.host,
+      port:options.port
+    }, (data) => {
+      resolve(data.portalUrl);
+    }, "json");
+  });
+}
+var getPortalUrl = typeof(PORTAL_URL) !== 'undefined' ? justUseUrl : lookUpMudGatewayUrl;
+
+
+setupMudSession(WebSocket, getPortalUrl, {
   scrollBottom:scrollBottom,
   //host:'3k.org',
   //port:'3000',
@@ -76,7 +94,8 @@ var mudSession = setupMudSession(WebSocket, {
   //host:'boa.sindome.org',
   //port:'5555',
   screenCursor:screenCursor,
-});
+  onConnect:initMudSession
+})
 
 
 function scrollBottom() {
@@ -125,7 +144,7 @@ BufferTarget.prototype.append = function(x) {
   scrollBottom();
 }
 
-$(()=> {
+function initMudSession(mudSession) {
   insertionPoint = $("#scrollback");
   var screenOutput = new BufferTarget($("#scrollback"));
   screenCursor.pipe(screenOutput);
@@ -136,7 +155,7 @@ $(()=> {
       mudSession.sendCommand(localStorage.autorun);
     },1000);
   }
-  $("#commandLine").keypress(e => {
+ $("#commandLine").keypress(e => {
     if(e.which == 13) {
       var val = $("#commandLine").val();
       mudSession.sendCommand(val);
@@ -147,5 +166,8 @@ $(()=> {
     }
   });
   $("#commandLine").focus();
+}
+
+$(()=> {
 });
 
