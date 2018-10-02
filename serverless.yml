@@ -59,6 +59,8 @@ custom:
           ContentType: 'text/html'
         - "*.mjs":
           ContentType: 'text/javascript'
+        - "*/*.mjs":
+          ContentType: 'text/javascript'
       
 # you can overwrite defaults here
 #  stage: dev

@@ -16,6 +16,11 @@ GeneralBufferCursor.prototype.readNext = function() {
     });
   }
 }
+
+GeneralBufferCursor.prototype.hasNext = function() {
+  return this.buffer.hasPosition(this.position);
+}
+
 GeneralBufferCursor.prototype.clone = function() {
   var cursor = new GeneralBufferCursor(this.buffer);
   cursor.position = this.position;
@@ -36,6 +41,16 @@ GeneralBufferCursor.prototype.readUntil = function(testVal) {
   })
 }
 */
+
+GeneralBuffer.prototype.hasPosition = function(position) {
+  var idx = position - this.start;
+  if(idx < this.data.length) {
+    return true;
+  }
+  else {
+    return false;
+  }
+}
 
 
 var BEFORE_BUFFER = new Error("Read position already evicted from buffer");

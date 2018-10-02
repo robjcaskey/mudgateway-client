@@ -27,4 +27,5 @@ export var FEATURE = {
   AARD:102,
   ATCP:200,
   GMCP:201,
+  EOR:25
 }

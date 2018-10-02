@@ -64,7 +64,7 @@ function justUseUrl() {
 }
 
 var lookUpMudGatewayUrl = function(options) {
-  var apiRoot = "https://api-dev.mudgateway.com";
+  var apiRoot = "https://api.mudgateway.com";
   var apiUrl = apiRoot+"/getPortalUrl";
   return new Promise((resolve, reject) => {
     $.post(apiUrl, {
@@ -78,21 +78,29 @@ var lookUpMudGatewayUrl = function(options) {
 var getPortalUrl = typeof(PORTAL_URL) !== 'undefined' ? justUseUrl : lookUpMudGatewayUrl;
 
 
+var searchParams = new URLSearchParams(window.location.search);
+var host = searchParams.get("host");
+var port = searchParams.get("port");
+var requestedGame = searchParams.get("game");
+var gameModuleName = requestedGame ? requestedGame : 'generic';
+
+
+
+//host:'3k.org',
+//port:'3000',
+//host:'mush.pennmush.org',
+//port:'4201',
+//host:'8bit.fansi.org',
+//host:'mush.pennmush.org',
+//port:'4201',
+//host:'midmud.com',
+//port:'5555',
+//host:'boa.sindome.org',
+//port:'5555',
 setupMudSession(WebSocket, getPortalUrl, {
   scrollBottom:scrollBottom,
-  //host:'3k.org',
-  //port:'3000',
-  //host:'mush.pennmush.org',
-  //port:'4201',
-  //host:'8bit.fansi.org',
-  //host:'mush.pennmush.org',
-  //port:'4201',
-  //host:'midmud.com',
-  //port:'5555',
-  host:'aardmud.org',
-  port:'23',
-  //host:'boa.sindome.org',
-  //port:'5555',
+  host:host,
+  port:port,
   screenCursor:screenCursor,
   onConnect:initMudSession
 })
@@ -166,6 +174,11 @@ function initMudSession(mudSession) {
     }
   });
   $("#commandLine").focus();
+  return import('./games/'+gameModuleName+'.mjs')
+  .then(gameModule=> {
+    return gameModule.onNewSession(mudSession);
+  });
+  
 }
 
 $(()=> {

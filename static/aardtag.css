@@ -46,3 +46,11 @@
   right:15px;
   margin:1em;
 }
+.aardCombatSpam {
+  font-size:x-small; 
+}
+@media screen and (max-width: 1500px) {
+  .aardMap {
+    display:none;
+  }
+}

@@ -16,7 +16,7 @@ AnsiCursor.prototype.clone = function() {
   return cursor;
 }
 AnsiCursor.prototype.writeAll = function(element) {
-  if(this.generalCursor.position >= this.buffer.end - 1) {
+  if(this.generalCursor.position >= this.buffer.end) {
     return Promise.resolve();
   }
   return this.generalCursor.readNext()

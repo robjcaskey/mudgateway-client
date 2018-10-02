@@ -1,6 +1,7 @@
 import {GeneralBuffer} from './GeneralBuffer.mjs';
 import {AnsiCursor} from './AnsiCursor.mjs';
 import {TELNET, ANSI, FEATURE} from './constants.mjs';
+import {ansiListToString, replaceMatches} from './util.mjs';
 
 
 
@@ -98,7 +99,7 @@ function charDesc(c) {
     return "unprintable";
   }
 }
-function listToString(data) {
+function telnetListToString(data) {
   return data.map(x => String.fromCharCode(x))
   .join("");
 }
@@ -117,161 +118,11 @@ function listToGmcpString(data) {
 
 
 var ansiByteTriggers = []
+var gmcpTriggers = [];
 var telnetByteTriggers = [];
 var outputBuffer = new GeneralBuffer();
 
-function setupAardwolfTriggers() {
-/*
-  ansiByteTriggers.push({disabled:true,order:400,description:"Prompt",match:GlobTrigger("\n* > "), fire:FireElementWrap($("<div>").addClass("aardPrompt"), (element, matches)=>{
-    return matches.map(match => {
-      return ()=> {
-        return readMatchOnto(match, element);
-      }
-    }).reduce((p, f) => p.then(f), Promise.resolve())
-    .then(()=> {
-      $("#prompt").empty();
-      //return div.addClass("aardPrompt")
-      $("#prompt").append(element);
-      scrollBottom();
-    });
-  })});
-  ansiByteTriggers.push({disabled:false,order:400,description:"Reconnecting",match:GlobTrigger("\n*Reconnecting to Game"), fire:(matches)=>{
-    return Promise.resolve();
-  }});
-*/
-  ansiByteTriggers.push({order:400,disabled:false,description:"Create character prompt",match:GlobTrigger("create a new character\n"), fire:FireWraps(extract =>  {
-    return $("<div>")
-    .addClass("btn btn-outline-primary")
-    .css({
-      "border":"2px solid blue"
-    })
-    .text(listToString(extract))
-    .click(()=>{
-      mudSession.sendCommand("NEW")
-    });
-  })});
-  ansiByteTriggers.push({order:400,disabled:false,description:"auto opt-in to color at character-create",match:GlobTrigger("\rUse Color?"), fire:()=> {
-    mudSession.sendCommand("Y")
-  }});
-  ansiByteTriggers.push({order:400,disabled:false,description:"Choose class",match:GlobTrigger("Choose your primary class,"), fire:FireWraps(extract =>  {
-    var container = $("<span>");
-    container.append($("<h4>",{text:"Choose your primary class."}))
-    var options = ["Mage","Warrior","Thief","Ranger","Psi","Paladin","Cleric"].map(option => {
-      return $("<span>")
-      .addClass("btn btn-outline-primary")
-      .css({
-        "border":"2px solid blue"
-      })
-      .text(option)
-      .click(()=>{
-        mudSession.sendCommand(option)
-      });
-    });
-    return $(container).append(options);
-  })});
-  ansiByteTriggers.push({disabled:false,order:400,description:"Map",match:GlobTrigger("<MAPSTART>@<MAPEND>"), fire:matches => {
-    var outboundElement = $("<span>").addClass("aardMap");
-    return readMatchOnto(matches[1], outboundElement)
-    .then(()=> {
-      outboundElement.find("span:contains('Exits')").last().remove()
-      $("#map").empty();
-      $("#map").append(outboundElement);
-      var replacementElement = $("<span>").text("Map was here");
-      return replaceMatches(matches, document.createComment("MAP was here but replaced by trigger"))
-    });
-  }});
-/*
-  SIMPLE MAP EXAMPLE
-  ansiByteTriggers.push({disabled:false,order:400,description:"Map",match:GlobTrigger("<MAPSTART>@<MAPEND>"), fire:matches => {
-    var outboundElement = $("<span>").addClass("aardMap");
-    return readMatchOnto(matches[1], outboundElement)
-    .then(()=> {
-      $("#map").empty();
-      $("#map").append(outboundElement);
-      var replacementElement = $("<span>").text("Map was here");
-      return replaceMatches(matches, document.createComment("MAP was here but replaced by trigger"))
-    });
-  }});
-*/
-/*
-  ansiByteTriggers.push({order:400,disabled:false,description:"Choose subclass",match:GlobTrigger("* SUBCLASSES ]"), fire:FireWraps(extract =>  {
-    var container = $("<span>");
-    container.append($("<h4>",{text:"Choose your subclass."}))
-    var options = ["TEST A","TEST B"].map(option => {
-      return $("<span>")
-      .addClass("btn btn-outline-primary")
-      .css({
-        "border":"2px solid blue"
-      })
-      .text(option)
-      .click(()=>{
-        mudSession.sendCommand(option)
-      });
-    });
-    return $(container).append(options);
-  })});
-*/
-  ansiByteTriggers.push({order:400,disabled:false,description:"Choose Yes No",match:GlobTrigger("[Y/N]"), fire:FireWraps(extract =>  {
-    var yes = $("<span>")
-    .addClass("btn btn-outline-primary")
-    .css({
-      "border":"2px solid blue"
-    })
-    .text("Yes")
-    .click(()=>{
-      mudSession.sendCommand("Y")
-    });
-    var no  = $("<span>")
-    .addClass("btn btn-outline-primary")
-    .css({
-      "border":"2px solid blue"
-    })
-    .text("No")
-    .click(()=>{
-      mudSession.sendCommand("N")
-    });
-    return $("<span>").append([yes, no]);
-  })});
-  ansiByteTriggers.push({order:400,disabled:false,description:"Line Rule",match:GlobTrigger("-----------------------------------------------------------------------------\n"), fire:FireWraps(()=>$("<hr>"))});
-  function sayMatches(matches) {
-   console.log("wrap fired hr matches "+matches,matches)
-  }
-  function aardUnmatchedTrigger(tagName, elementTemplate) {
-    ansiByteTriggers.push({order:400,disabled:false,description:"aardTag-unmatched-"+tagName,match:GlobTrigger("{"+tagName+"}@\n"), fire:(matches => {
-      var element = elementTemplate ? elementTemplate.clone() : $("<span>");
-      var tagContent = element.addClass("aardTag-"+tagName);
-      return readMatchOnto(matches[1], tagContent)
-      .then(()=> {
-        return replaceMatches(matches, tagContent)
-      });
-    })})
-  }
-  function aardMatchedTrigger(tagName, elementTemplate) {
-    ansiByteTriggers.push({order:400,disabled:false,description:"aardTag-matched-"+tagName,match:GlobTrigger("{"+tagName+"}\n@{/"+tagName+"}\n"), fire:(matches => {
-      var element = elementTemplate ? elementTemplate.clone() : $("<span>");
-      var tagContent = element.addClass("aardTag-"+tagName);
-      return readMatchOnto(matches[1], tagContent)
-      .then(()=> {
-        return replaceMatches(matches, tagContent)
-      });
-    })})
-  }
-  aardUnmatchedTrigger("rname",$("<div>"));
-  aardMatchedTrigger("rdesc");
-  aardMatchedTrigger("roomobjs");
-  aardMatchedTrigger("roomchars");
-  aardUnmatchedTrigger("exits");
-  aardUnmatchedTrigger("coords");
-  //ansiByteTriggers.push({order:400,disabled:false,description:"aardTag-matched-chan",match:GlobTrigger("{chan ch=*}*"), fire:ClassWrap("div","aardTag-chan")});
-  aardUnmatchedTrigger("repop");
-  aardUnmatchedTrigger("affon");
-  aardUnmatchedTrigger("affoff");
-
-}
-
-
 function setupTriggers(mudSession) {
-
   telnetByteTriggers.push({order:100,disabled:false,description:"telnet IAC master logic",match:(cursor) => {
     var features = {}
     var aardTagsEnabled = false;
@@ -293,6 +144,7 @@ function setupTriggers(mudSession) {
       l.pop();
       return Promise.resolve(l);
     }
+    features[FEATURE.EOR] = {}
     features[FEATURE.AARD] = {
       sbHandler: function() {
         console.log("Handling Aard")
@@ -300,7 +152,7 @@ function setupTriggers(mudSession) {
         return readUntil(TELNET.IAC)
         .then(shedLastByte)
         .then(rawData => {
-          var data = listToString(rawData);
+          var data = telnetListToString(rawData);
         });
       }
     }
@@ -310,7 +162,7 @@ function setupTriggers(mudSession) {
         return readUntil(TELNET.IAC)
         .then(shedLastByte)
         .then(rawAtcpData => {
-          var atcpData = listToString(rawAtcpData);
+          var atcpData = telnetListToString(rawAtcpData);
           console.log("GOT ATCP DATA "+atcpData)
         });
       }
@@ -324,21 +176,21 @@ function setupTriggers(mudSession) {
         return readUntil(TELNET.SPACE)
         .then(shedLastByte)
         .then(rawPackageData => {
-          var packageData = listToString(rawPackageData);
+          var packageNameData = telnetListToString(rawPackageData);
           return readUntil(TELNET.IAC)
           .then(shedLastByte)
           .then(rawJsonData => {
             var jsonData = listToGmcpString(rawJsonData);
-            console.log("RAW PACKAGE "+packageData)
+            console.log("RAW PACKAGE "+packageNameData)
             console.log("GOT JSON "+jsonData)
             try {
               var result = JSON.parse(jsonData);
               console.log("GMCP Package: "+gmcpPackage+" "+JSON.stringify(result));
-              return Promise.resolve();
             }
             catch(e) {
-              throw "unable to parse JSON from gmcp for gmcpPackage "+gmcpPackage+" "+jsonData;
+              throw "unable to parse JSON from gmcp for gmcpPackage "+packageNameData+" "+jsonData;
             }
+            return mudSession.onGmcpEvent(packageNameData, result);
           });
         })
       }
@@ -390,6 +242,7 @@ function setupTriggers(mudSession) {
           return iacHandleDont();
         }
         else if(c == TELNET.GA) {
+          alert("GOT GA")
           return Promise.resolve()
         }
         else if(c == TELNET.SB) {
@@ -404,8 +257,8 @@ function setupTriggers(mudSession) {
               throw "no SB handler for IAC type "+subType;
             }
             else {
-              //var handler = feature.sbHandler ? feature.sbHandler : unimplementedSbHandler;
-              var handler = unimplementedSbHandler;
+              var handler = feature.sbHandler ? feature.sbHandler : unimplementedSbHandler;
+              //var handler = unimplementedSbHandler;
               return handler()
               .then(result => {
                 return cursor.readNext()
@@ -413,7 +266,7 @@ function setupTriggers(mudSession) {
                   if(b != TELNET.SE) {
                     throw "IAC Subnegotation terminated by IAC but then not followed immediately by SE - instead got "+b;
                   }
-                  console.log("_____________ END SB HANDLE ",cursor.position)
+                  console.log("_____________ END SB HANDLE ",cursor.position," for subtype",subType)
                 });
               });
             }
@@ -559,93 +412,6 @@ function LiteralTrigger(txt) {
     return checkCurrentLetter();
   }
 }
-function GlobMatch(txt) {
-  var characterClassState = {
-    excludedCharacters:[]
-  }
-  return InnerGlobMatch(txt, characterClassState);
-}
-function InnerGlobMatch(txt, characterClassState) {
-  return function(cursor) {
-    var startCursor = cursor.clone();
-    var remaining = txt;
-
-    function testRemainingUntilSuccess() {
-      var splitCursor = cursor.clone();
-      var wildcardStartCursor = cursor.clone();
-      console.log("head Split pos was "+splitCursor.position)
-      var literalMatch = {
-        type:'literal',
-        startCursor:startCursor,
-        afterCursor:splitCursor,
-      }
-      function tryNext() {
-        return cursor.readNext()
-        .then(b => {
-          if(characterClassState.excludedCharacters.indexOf(b) !== -1) {
-            return;
-          }
-          var preMatchAttemptCursor = cursor.clone();
-          var subtrigger = InnerGlobMatch(remaining, characterClassState);
-          return subtrigger(cursor)
-          .then(subMatches => {
-            if(subMatches) {
-              var wildcardMatch = {
-                type:'wildcard',
-                startCursor:wildcardStartCursor,
-                afterCursor:preMatchAttemptCursor
-              }
-              console.log(txt,"found subhead match ", [literalMatch, wildcardMatch, ...subMatches]);
-              return [literalMatch, wildcardMatch, ...subMatches];
-            }
-            else {
-              cursor.position = preMatchAttemptCursor.position;
-              return tryNext();
-            }
-          });
-        });
-      }
-      return tryNext();
-    }
-    function checkCurrentLetter() {
-      if(remaining.length == 0) {
-        var match = {
-          startCursor:startCursor,
-          afterCursor:cursor
-        }
-        console.log(txt,"Found head match of",match)
-        return [match];
-      }
-      else {
-        var expectedC = remaining[0];
-        remaining = remaining.slice(1);
-        if(expectedC == "@") {
-          return testRemainingUntilSuccess();
-        }
-        else if(expectedC == "*") {
-          characterClassState.excludedCharacters.push(TELNET.LF);
-          return testRemainingUntilSuccess();
-        }
-        else if(expectedC == "$") {
-          return checkCurrentLetter();
-        }
-        else {
-          return cursor.readNext()
-          .then(b => {
-            var c = String.fromCharCode(b);
-            if(c == expectedC) {
-              return checkCurrentLetter();
-            }
-            else {
-              return false;
-            }
-          });  
-        }
-      }
-    }
-    return checkCurrentLetter();
-  }
-}
 
 
 
@@ -685,137 +451,8 @@ function RegexTrigger(regex, bufferSize) {
 }
 
 
-function GlobTrigger(pattern) {
-  return GlobMatch(pattern);
-}
-
-function FireWraps(...wraps) {
-  return function(matches) {
-    console.log("FireWraps for "+matches.length+" matches")
-    console.log(wraps)
-    console.log(matches)
-    return Promise.all(matches.map((match, i) => {
-      var wrap = wraps[i];
-      console.log("Firing wrap for match "+i, wrap)
-      var len = match.afterCursor.position - match.startCursor.position;
-      return match.afterCursor.buffer.slice(match.startCursor.position,match.afterCursor.position)
-      .then(wrap)
-      .then(el => {
-        console.log("Wrap got element",match.startCursor.position,len,el)
-        return match.afterCursor.buffer.splice(match.startCursor.position, len, el)
-      });
-    }));
-  }
-}
-function replaceMatches(matches, ...replacementElements) {
-  var firstMatch = matches[0];
-  var buffer = firstMatch.startCursor.buffer;
-  var lastMatch = matches.slice(-1)[0];
-  var startPosition = firstMatch.startCursor.position;
-  var endPosition = lastMatch.afterCursor.position;
-  var len = endPosition - startPosition;
-  console.log("Cutting out "+buffer.data.slice(startPosition, startPosition+len))
-  return buffer.splice(startPosition, len, ...replacementElements);
-}
 
 
-function readMatchOnto(match, el) {
-  var buffer = new GeneralBuffer();
-  var cursor = new AnsiCursor(buffer);
-  console.log(match)
-  console.log("STARTING SLICE from",match.startCursor.position,"to",match.afterCursor.position)
-  return match.startCursor.buffer.slice(match.startCursor.position, match.afterCursor.position)
-  .then(excerpt => {
-    console.log("GOT EXCERPT")
-    console.log(excerpt);
-    excerpt.map(val => buffer.append(val));
-    var element = $(el);
-    return cursor.writeAll(element)
-    
-  });
-}
-function FireElementWrap(elementTemplate, wrap) {
-  return function(matches) {
-    var element = elementTemplate.clone();
-    return Promise.resolve(wrap(element, matches))
-    .then(()=> {
-      return replaceMatches(matches, element);
-    })
-  }
-}
-function ClassWrap(elementType, className) {
-  return $("<hr>");
-/*
-  return FireElementWrap(elementType, div => {
-    div.addClass(className);
-    return div;
-  });
-*/
-}
-
-/*
-ansiByteTriggers.push({order:400,description:"Snails turf?",match:GlobTrigger("SNAILZ TURF!"), fire:FireWraps(matches =>  {
-  return $("<span>")
-  .css({
-    "background-color":"red",
-    "margin":"3em",
-    "border-radius":"1em",
-  })
-  .text(listToString(matches[0]));
-})});
-
-ansiByteTriggers.push({order:400,description:"Embed jpg",match:GlobTrigger("https://*.jpg"), fire:FireWraps(matches =>  {
-  return $("<img>")
-  .css({
-    "background-color":"yellow",
-    "margin":"3em",
-    "border-radius":"1em",
-  })
-  .attr("src", listToString(matches[0]));
-})});
-
-ansiByteTriggers.push({order:400,description:"Who",match:GlobTrigger("\x1b[1;37m\x1b[44m*Aardwolf Players Online*Max on*37m]"), fire:FireElementWrap("div", div =>  {
-    alert("WHEE")
-  div.addClass("aardCmd-who");
-  return div;
-})});
-ansiByteTriggers.push({order:400,description:"Chat",match:GlobTrigger("{chat ch=tech}"), fire:FireWraps(extract =>  {
-  return $("<pre>")
-  .css({
-    "background-color":"yellow",
-    "margin":"3em",
-    "border-radius":"1em",
-  })
-  .text(listToString(extract));
-})});
-*/
-
-/*
-ansiByteTriggers.push({order:500,description:"Image trigger",match:function(cursor) {
-  var startCursor = cursor.clone();
-  var textMatch = GlobMatch("https://*.png ");
-  return textMatch(cursor)
-  .then(match => {
-    if(match) { 
-      return {
-        match:match,
-        startCursor:startCursor,
-        afterCursor:cursor,
-      }
-    }
-  })
-}, fire:(result)=>{
-  return result.afterCursor.buffer.slice(result.startCursor.position,result.afterCursor.position)
-  .then(urlData => {
-    console.log("SLICING "+listToString(urlData))
-    var url = listToString(urlData);
-    var img = $("<img>");
-    img.attr("src", url);
-    $("#scrollback").append(img);
-    return "Dog";
-  });
-}})
-*/
 
 ansiByteTriggers.sort(trigger => trigger.order);
 ansiByteTriggers = ansiByteTriggers.filter(trigger => !trigger.disabled);
@@ -849,6 +486,17 @@ MudSession.prototype.sendToProxy = function(action, payload) {
   console.log("Client sending "+JSON.stringify(data))
   this.webSocket.send(JSON.stringify(data));
 }
+MudSession.prototype.addAnsiByteTrigger = function(trigger) {
+  return ansiByteTriggers.push(trigger);
+};
+MudSession.prototype.addGmcpTrigger = function(trigger) {
+  return gmcpTriggers.push(trigger);
+};
+MudSession.prototype.onGmcpEvent = function(name, data) {
+  Promise.all(gmcpTriggers.map(trigger => {
+    return trigger.fire(name, data);
+  }));
+};
 
 export function setupMudSession(WebSocketClass, getPortalUrl, options) {
   return getPortalUrl(options)
@@ -860,9 +508,8 @@ export function setupMudSession(WebSocketClass, getPortalUrl, options) {
     var mudSession = new MudSession(webSocket);
 
     setupTriggers(mudSession)
-    webSocket.onopen = function() {
-      console.log('WebSocket Client Connected');
-      mudSession.sendToProxy('connect', {host:options.host,port:options.port})
+    function onConnect() {
+      mudSession.sendRawCodes([TELNET.IAC,TELNET.WILL,FEATURE.EOR])
       mudSession.sendRawCodes([TELNET.IAC,TELNET.WILL,FEATURE.MXP])
       mudSession.sendRawCodes([TELNET.IAC,TELNET.WILL,FEATURE.GMCP])
       mudSession.sendRawCodes([TELNET.IAC,TELNET.WILL,FEATURE.ATCP])
@@ -870,6 +517,10 @@ export function setupMudSession(WebSocketClass, getPortalUrl, options) {
       if(options.onConnect) {
         options.onConnect(mudSession);
       }
+    }
+    webSocket.onopen = function() {
+      console.log('WebSocket Client Connected');
+      mudSession.sendToProxy('connect', {host:options.host,port:options.port})
     }
     var cursor = mudSession.socketBuffer.cursor();
     webSocket.onerror = function(error) {
@@ -901,6 +552,9 @@ export function setupMudSession(WebSocketClass, getPortalUrl, options) {
             waitingForData();
             waitingForData = false;
           }
+        }
+        else if(action == "connected") {
+          onConnect();
         }
         else if(action == "proxyError") {
           throw message;
