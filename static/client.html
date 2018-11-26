@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="https://unpkg.com/compromise@latest/builds/compromise.min.js"></script>
 
 
 <!--<script type="module" src="telnetCommon.mjs"></script>-->
@@ -21,16 +22,40 @@
 </head>
 
 <body>
-
+<div id='startingServer' class='jumbotron' role='alert'>
+  <h1>Starting server now</h2>
+  <p>Looks like you are the first person to use this today! Starting up the server for you now. This process takes about 90 seconds - hang tight, no need to refresh.</p>
+</div>
 <div class="container-fluid">
   <div id='map' class='aardMap'></div>
-  <div id='scrollback'>
+  <div id='scrollback' class='ansi'>
   </div>
   <div>
-    <div id='prompt'></div>
-    <input id='commandLine' type="text">
-    <div id='statusBar'></div>
+<!--
+    <div id='navBar'>
+      <div class='moveButtonContainer'>
+        <div class="moveButton" id="moveNwButton">nw</div>
+        <div class="moveButton" id="moveNButton">n</div>
+        <div class="moveButton" id="moveNeButton">ne</div>
+        <div class="moveButton" id="moveWButton">w</div>
+        <div class="moveButton"></div>
+        <div class="moveButton" id="moveEButton">e</div>
+        <div class="moveButton" id="moveSwButton">sw</div>
+        <div class="moveButton" id="moveSButton">s</div>
+        <div class="moveButton" id="moveSeButton">se</div>
+      </div>
+-->
+    </div>
   </div>
+</div>
+<div id='prompt'></div>
+<input id='commandLine' type="text">
+<div id='statusBar'></div>
+<div id='combatActions' class='mobileOnly'>
+  Combat Actions
+</div>
+<div id='movementActions' class='mobileOnly'>
+  Move
 </div>
 
 </body>

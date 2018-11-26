@@ -123,7 +123,9 @@ var telnetByteTriggers = [];
 var outputBuffer = new GeneralBuffer();
 
 function setupTriggers(mudSession) {
+  var resultingActions;
   telnetByteTriggers.push({order:100,disabled:false,description:"telnet IAC master logic",match:(cursor) => {
+    resultingActions = [];
     var features = {}
     var aardTagsEnabled = false;
     function readUntil(END) {
@@ -242,7 +244,11 @@ function setupTriggers(mudSession) {
           return iacHandleDont();
         }
         else if(c == TELNET.GA) {
-          alert("GOT GA")
+          console.log("GA GA");
+          return Promise.resolve()
+        }
+        else if(c == TELNET.EOR) {
+          console.log("GA EOR");
           return Promise.resolve()
         }
         else if(c == TELNET.SB) {
@@ -296,7 +302,7 @@ function setupTriggers(mudSession) {
     })
   }, fire:(match)=>{
     console.log("REPLACING IAC MATCH",match,match.startCursor.position,match.afterCursor.position,match.afterCursor.buffer)
-    return replaceMatches([match])
+    return replaceMatches([match], ...resultingActions)
   }});
   var telnetTriggerCursor = mudSession.socketBuffer.cursor();
   var ansiBuffer = new GeneralBuffer();
@@ -514,6 +520,7 @@ export function setupMudSession(WebSocketClass, getPortalUrl, options) {
       mudSession.sendRawCodes([TELNET.IAC,TELNET.WILL,FEATURE.GMCP])
       mudSession.sendRawCodes([TELNET.IAC,TELNET.WILL,FEATURE.ATCP])
       mudSession.sendRawCodes([TELNET.IAC,TELNET.WILL,FEATURE.AARD])
+      mudSession.sendRawCodes([TELNET.IAC,TELNET.WILL,FEATURE.MSP])
       if(options.onConnect) {
         options.onConnect(mudSession);
       }

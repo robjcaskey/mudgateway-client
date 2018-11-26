@@ -1,14 +1,6 @@
-
 import {GlobTrigger} from '../Glob.mjs';
-import {FireElementWrap, FireWraps, ansiListToString, readMatchOnto, replaceMatches} from '../util.mjs';
-function mapSeries(series) {
-  return series.reduce((acc, cur)=> {
-    return acc
-    .then(()=> {
-      return cur();
-    });
-  }, Promise.resolve());
-}
+import {FireElementWrap, FireWraps, ansiListToString, readMatchOnto, replaceMatches, mapSeries} from '../util.mjs';
+
 
 function clobberOntoElement(containerElement) {
   return matches =>  {
@@ -236,8 +228,11 @@ function onNewCharacter(mudSession) {
 
 function enableQuickMode(mudSession) {
   function killOne() {
-    var name = currentRoom.charsElement.find(".ansi").first().text().split(" ").slice(1,2).join(" ")
-    cmd("kill "+name);
+    var name = currentRoom.charsElement.find(".ansi").first().text();
+    var doc = nlp(name);
+    var nouns = doc.nouns().out('text');
+    var noun = nouns.trim().split(" ")[0];
+    cmd("kill "+noun);
   }
   var cmd = (x) => mudSession.sendCommand(x);
   var escMode = false;
@@ -250,6 +245,10 @@ function enableQuickMode(mudSession) {
     }
     else {
       if(e.keyCode == 75) cmd("north");
+      else if(e.keyCode == 81) cmd("kick");
+      else if(e.keyCode == 87) cmd("bash");
+      else if(e.keyCode == 69) cmd();
+      else if(e.keyCode == 82) cmd();
       else if(e.keyCode == 74) cmd("south");
       else if(e.keyCode == 72) cmd("west");
       else if(e.keyCode == 76) cmd("east");

@@ -175,7 +175,10 @@ function readAnsiSequence(cursor) {
         }
         else if(v >= 100 && v <= 107) {
           var colorIdx = v - 100 - 1;
-          state.ansi.bg = "bright"+ansiColors[colorIdx];
+          state.bg = "bright"+ansiColors[colorIdx];
+        }
+        else if(v == 39) {
+          delete(state.fg);
         }
         else if(v == 38) {
           var subtype = readParam();
@@ -191,8 +194,11 @@ function readAnsiSequence(cursor) {
             throw "invalid subtype when parsing expanded foreground color";
           }
         }
+        else if(v == 49) {
+          delete(state.bg);
+        }
         else {
-          throw 'unknown ansi color param '+param;
+          throw 'unknown ansi color param '+v;
         }
       }
     }

@@ -8,6 +8,7 @@ export var TELNET = {
   OPENED_CURLY_BRACKET:123,
   CLOSED_CURLY_BRACKET:125,
   NONBREAKING_SPACE:160,
+  EOR:239,
   SE:240,
   GA:249,
   SB:250,
@@ -23,6 +24,7 @@ export var ANSI = {
   ERASE_IN_DISPLAY:"J"
 }
 export var FEATURE = {
+  MSP:90,
   MXP:91,
   AARD:102,
   ATCP:200,

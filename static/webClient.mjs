@@ -66,14 +66,36 @@ function justUseUrl() {
 var lookUpMudGatewayUrl = function(options) {
   var apiRoot = "https://api.mudgateway.com";
   var apiUrl = apiRoot+"/getPortalUrl";
-  return new Promise((resolve, reject) => {
-    $.post(apiUrl, {
-      host:options.host,
-      port:options.port
-    }, (data) => {
-      resolve(data.portalUrl);
-    }, "json");
-  });
+  function checkPortalUrl() {
+    return new Promise((resolve, reject) => {
+      $.post(apiUrl, {
+        host:options.host,
+        port:options.port
+      }, (data) => {
+        resolve(data);
+      }, "json");
+    });
+  }
+  function waitFor(interval) {
+    return new Promise((resolve, reject) => {
+      setTimeout(resolve, interval);
+    });
+  }
+  function checkUntilStarted() {
+    return checkPortalUrl()
+    .then(result => {
+      if(result.status == "running") {
+        $("#startingServer").hide();
+        return result.portalUrl;
+      }
+      else {
+        $("#startingServer").show();
+        return waitFor(3000)
+        .then(checkUntilStarted);
+      }
+    });
+  }
+  return checkUntilStarted();
 }
 var getPortalUrl = typeof(PORTAL_URL) !== 'undefined' ? justUseUrl : lookUpMudGatewayUrl;
 
@@ -97,6 +119,7 @@ var gameModuleName = requestedGame ? requestedGame : 'generic';
 //port:'5555',
 //host:'boa.sindome.org',
 //port:'5555',
+$("#startingServer").hide();
 setupMudSession(WebSocket, getPortalUrl, {
   scrollBottom:scrollBottom,
   host:host,
@@ -163,6 +186,31 @@ function initMudSession(mudSession) {
       mudSession.sendCommand(localStorage.autorun);
     },1000);
   }
+
+ $("#moveNwButton").click(()=> {
+   mudSession.sendCommand("nw");
+ });
+ $("#moveNButton").click(()=> {
+   mudSession.sendCommand("n");
+ });
+ $("#moveNeButton").click(()=> {
+   mudSession.sendCommand("ne");
+ });
+ $("#moveWButton").click(()=> {
+   mudSession.sendCommand("w");
+ });
+ $("#moveEButton").click(()=> {
+   mudSession.sendCommand("e");
+ });
+ $("#moveSwButton").click(()=> {
+   mudSession.sendCommand("sw");
+ });
+ $("#moveSButton").click(()=> {
+   mudSession.sendCommand("s");
+ });
+ $("#moveSeButton").click(()=> {
+   mudSession.sendCommand("se");
+ });
  $("#commandLine").keypress(e => {
     if(e.which == 13) {
       var val = $("#commandLine").val();
@@ -170,7 +218,6 @@ function initMudSession(mudSession) {
       //writeStringToScreen(val)
       //screen.doCarriageReturn();
       $("#commandLine").val("");
-      scrollBottom();
     }
   });
   $("#commandLine").focus();
